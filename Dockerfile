@@ -1,17 +1,25 @@
 FROM python:2.7.11
 MAINTAINER Michael J. Stealey <mjstealey@gmail.com>
 
+# Install debian system packages / prerequisites
 RUN apt-get update && apt-get install -y \
     postgresql-9.4 \
     postgresql-client-9.4 \
     openssh-client \
     openssh-server
 
+# Install pip packages
 RUN pip install --upgrade pip
 RUN pip install \
     mezzanine==4.1.0 \
     psycopg2==2.6.1 \
     gunicorn==19.4.5
+
+# Upgrade mezzanine using source from Github
+WORKDIR /usr/src
+RUN git clone https://github.com/stephenmcd/mezzanine.git
+WORKDIR /usr/src/mezzanine
+RUN python setup.py install
 
 # Install SSH for remote PyCharm debugging
 RUN mkdir /var/run/sshd
@@ -28,12 +36,12 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd
 
-ADD . /home/docker/pamweb
-WORKDIR /home/docker/pamweb
-
 # Cleanup
 RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/src/mezzanine
+
+# Set entry working directory 
+WORKDIR /home/docker/pamweb
 
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]

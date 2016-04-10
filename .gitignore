@@ -1,3 +1,6 @@
 .idea
 pamweb/pamweb/local_settings.py
 pamweb/static
+pamweb/log
+pamweb/nginx.conf
+certs
