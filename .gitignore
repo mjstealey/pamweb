@@ -1,8 +1,2 @@
 .idea
-pamweb/pamweb/local_settings.py
-pamweb/static
-pamweb/log
-pamweb/nginx/nginx.conf
 certs
-pamweb/deploy/local-env.sh
-pamweb/init-web

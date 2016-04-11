@@ -222,6 +222,7 @@ deploy_pamweb_nodb() {
 deploy_dev_pamweb() {
     echo "*** DEPLOY DEVELOPMENT - WITH DB ***"
     build_pamweb
+    preflight_pamweb
     run_pamweb
     echo "*** INFO: Allowing containers to start up ***"
     for pc in $(seq 10 -1 1); do
@@ -237,6 +238,7 @@ deploy_prod_pamweb() {
     echo "*** DEPLOY PRODUCTION - WITH DB ***"
     build_pamweb
     restore_pamweb
+    preflight_pamweb
     run_pamweb
     echo "*** INFO: Allowing containers to start up ***"
     for pc in $(seq 10 -1 1); do

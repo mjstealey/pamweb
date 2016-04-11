@@ -4,4 +4,11 @@
 .DS_Store
 .coverage
 local_settings.py
+nginx.conf
+local-env.sh
+init-web
+/log
 /static
+/media_files
+pg.pamweb-testing.sql
+media.pamweb-testing.tar.gz
