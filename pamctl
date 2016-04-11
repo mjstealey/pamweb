@@ -155,6 +155,9 @@ backup_pamweb() {
     # backup pamweb-config.yaml
     cp ${PAMWEB_PATH}/deploy/pamweb-config.yaml \
         /home/${USER}/pamweb-backup/pamweb-config.yaml
+    # backup docker-compose.yml
+    cp ${PAMWEB_PATH}/docker-compose.yml \
+        /home/${USER}/pamweb-backup/docker-compose.yml
     # backup database
     cp ${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql \
         /home/${USER}/pamweb-backup/pg.pamweb-`date +"%m-%d-%y"`.sql
@@ -174,6 +177,9 @@ restore_pamweb() {
     # restore pamweb-config.yaml
     cp /home/${USER}/pamweb-backup/pamweb-config.yaml \
         ${PAMWEB_PATH}/deploy/pamweb-config.yaml
+    # restore docker-compose.yml
+    cp /home/${USER}/pamweb-backup/docker-compose.yml \
+        ${PAMWEB_PATH}/docker-compose.yml
     # restore database
     cp /home/${USER}/pamweb-backup/${PAMWEB_DATABASE} \
         ${PAMWEB_PATH}/${PAMWEB_DATABASE}
