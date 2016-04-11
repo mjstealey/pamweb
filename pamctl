@@ -261,6 +261,8 @@ case "$1" in
         ;;
     backup) backup_pamweb $1
         ;;
+    restore) restore_pamweb $1
+        ;;
     deploy_dev) deploy_dev_pamweb $1
         ;;
     deploy_prod) deploy_prod_pamweb $1
