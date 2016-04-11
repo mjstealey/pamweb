@@ -5,3 +5,4 @@ pamweb/log
 pamweb/nginx/nginx.conf
 certs
 pamweb/deploy/local-env.sh
+pamweb/init-web
