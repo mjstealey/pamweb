@@ -6,20 +6,20 @@ RUN apt-get update && apt-get install -y \
     postgresql-9.4 \
     postgresql-client-9.4 \
     openssh-client \
-    openssh-server
+    openssh-server \
+    rsync
 
-# Install pip packages
-RUN pip install --upgrade pip
-RUN pip install \
-    mezzanine==4.1.0 \
-    psycopg2==2.6.1 \
-    gunicorn==19.4.5
-
-# Upgrade mezzanine using source from Github
+# Install mezzanine from source
 WORKDIR /usr/src
 RUN git clone https://github.com/stephenmcd/mezzanine.git
 WORKDIR /usr/src/mezzanine
 RUN python setup.py install
+
+# Install pip packages
+RUN pip install --upgrade pip
+RUN pip install \
+    psycopg2==2.6.1 \
+    gunicorn==19.4.5
 
 # Install SSH for remote PyCharm debugging
 RUN mkdir /var/run/sshd

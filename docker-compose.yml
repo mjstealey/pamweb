@@ -10,9 +10,9 @@ web:
     #PGDATA: /var/lib/postgresql/data
     POSTGRES_DB: postgres
   volumes:
-    - /home/stealey/pamweb/pamweb:/home/docker/pamweb
+    - ./pamweb:/home/docker/pamweb
+    - ./pamweb/log:/var/log/pamweb
     - /var/run
-    - /home/stealey/pamweb/pamweb/log:/var/log/pamweb
   ports:
     - "8000:8000"
     - "1338:22"
@@ -25,7 +25,7 @@ nginx:
   volumes_from:
     - web
   volumes:
-    - /home/stealey/pamweb/certs:/certs
+    - ./certs:/certs
   ports:
     - "80:80"
     - "443:443"

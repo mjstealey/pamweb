@@ -2,5 +2,4 @@
 
 sleep 3s
 /usr/sbin/sshd
-#python manage.py runserver 0.0.0.0:8000
-source gunicorn_start
+python manage.py runserver 0.0.0.0:8000

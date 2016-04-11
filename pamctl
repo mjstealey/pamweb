@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+
+# pamctl
+# PAMweb Control Script
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### Local Config ###
+CONFIG_DIRECTORY='pamweb/deploy'
+CONFIG_FILE='pamweb-config.yaml'
+LOCAL_ENV_FILE='local-env.sh'
+HOME_DIR=${PWD}
+
+### Pre-flight Variables ###
+DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
+PROD_SERVER='source gunicorn_start'
+
+# Read pamweb-config.yaml into environment
+cd $CONFIG_DIRECTORY
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" $CONFIG_FILE > $LOCAL_ENV_FILE
+sed -i 's/#.*$//' $LOCAL_ENV_FILE
+sed -i '/^\s*$/d' $LOCAL_ENV_FILE
+while read line; do export $line; done < <(cat $LOCAL_ENV_FILE)
+cd $HOME_DIR
+
+display_usage() {
+    echo "*** USAGE ***"
+    echo " - TODO:"
+}
+
+stop_pamweb() {
+    echo "*** STOP ***"
+    docker-compose stop
+}
+
+start_pamweb() {
+    echo "*** START ***"
+    docker-compose start
+}
+
+remove_pamweb() {
+    echo "*** REMOVE ***"
+    # if web is running remove the static directory
+    if [[ -n "$(docker-compose ps | grep web | grep Up)" ]]; then
+        echo "*** INFO: Remove /static directory ***"
+        docker exec pam-web rm -rf static
+    fi
+    stop_pamweb
+    docker-compose rm -f
+}
+
+start_nginx() {
+    echo "*** START NGINX ***"
+    if [[ ! -n "$(docker-compose ps | grep nginx | grep Up)" ]]; then
+        echo "*** INFO: nginx is not running, waiting ***"
+    fi
+    if [[ $USE_NGINX = 'true' ]]; then
+        if [[ $USE_SSL = 'true' ]]; then
+            echo "*** INFO: Using pam-nginx-ssl.conf ***"
+            NGINX_CONF_FILE=pam-nginx-ssl.conf
+        else
+            echo "*** INFO: Using pam-nginx.conf ***"
+            NGINX_CONF_FILE=pam-nginx.conf
+        fi
+        export NGINX_CONF_FILE=$NGINX_CONF_FILE
+        cd pamweb
+            ./init-nginx
+        cd ../
+    else
+        echo "*** INFO: Not using Nginx ***"
+        docker-compose stop nginx
+    fi
+}
+
+stop_nginx() {
+    echo "*** STOP NGINX ***"
+    if [[ -n "$(docker-compose ps | grep nginx | grep Up)" ]]; then
+        echo "*** INFO: Stopping Nginx now ***"
+        docker-compose stop nginx
+    else
+        echo "*** INFO: Nginx is not running ***"
+    fi
+}
+
+restart_pamweb() {
+    echo "*** RESTART ***"
+    stop_pamweb
+    preflight_pamweb
+    start_pamweb
+    start_nginx
+}
+
+preflight_pamweb() {
+    echo "*** PREFLIGHT ***";
+    echo $PAMWEB_PATH
+    if [[ $USE_NGINX = 'true' ]]; then
+        echo "*** INFO: Using Nginx ***"
+        if [[ $USE_SSL = 'true' ]]; then
+            echo "*** INFO: Using SSL ***"
+            # disable SSH server from running
+            sed -i 's!'"/usr/sbin/sshd"'!'"# REMOVED SSH COMPONENT"'!g' ${PAMWEB_PATH}/init-web
+        else
+            echo "*** INFO: Not using SSL ***"
+            # enable SSH server for debugging purposes
+            sed -i 's!'"# REMOVED SSH COMPONENT"'!'"/usr/sbin/sshd"'!g' ${PAMWEB_PATH}/init-web
+        fi
+        echo "*** INFO: Using gunicorn ***"
+        # use production server to run PAMweb
+        sed -i 's/'"${DEV_SERVER}"'/'"${PROD_SERVER}"'/g' ${PAMWEB_PATH}/init-web
+    else
+        echo "*** INFO: Not using Nginx ***"
+        echo "*** INFO: Using Django runserver ***"
+        # use development server to run PAMweb
+        sed -i 's/'"${PROD_SERVER}"'/'"${DEV_SERVER}"'/g' ${PAMWEB_PATH}/init-web
+        # enable SSH server for debugging purposes
+        sed -i 's!'"# REMOVED SSH COMPONENT"'!'"/usr/sbin/sshd"'!g' ${PAMWEB_PATH}/init-web
+    fi
+}
+
+build_pamweb() {
+    echo "*** BUILD ***"
+    docker-compose build
+}
+
+run_pamweb() {
+    echo "*** RUN ***"
+    preflight_pamweb
+    docker-compose up -d
+}
+
+backup_pamweb() {
+    echo "*** BACKUP DATABASE, MEDIA AND SETTINGS FILES ***"
+    docker exec pam-web /usr/bin/pg_dump -c -d postgres -U postgres -h db \
+        > "${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql"
+    if [ ! -d "${PAMWEB_PATH}/media_files" ]; then
+        mkdir ${PAMWEB_PATH}/media_files;
+    fi
+    docker exec pam-web rsync -avh --dry-run /home/docker/pamweb/static/media \
+        /home/docker/pamweb/media_files
+    docker exec pam-web rsync -avh /home/docker/pamweb/static/media \
+        /home/docker/pamweb/media_files
+    cd ${PAMWEB_PATH}
+    tar -czvf "media.pamweb-`date +"%m-%d-%y"`.tar.gz" media_files
+    docker exec pam-web rm -rf /home/docker/pamweb/media_files
+    cd -
+    # Move files to backup directory in users home
+    if [ ! -d "/home/${USER}/pamweb-backup" ]; then
+        mkdir /home/${USER}/pamweb-backup;
+    fi
+    # backup local_settings.py
+    cp ${PAMWEB_PATH}/pamweb/local_settings.py \
+        /home/${USER}/pamweb-backup/local_settings.py
+    # backup settings.py
+    cp ${PAMWEB_PATH}/pamweb/settings.py \
+        /home/${USER}/pamweb-backup/settings.py
+    # backup pamweb-config.yaml
+    cp ${PAMWEB_PATH}/deploy/pamweb-config.yaml \
+        /home/${USER}/pamweb-backup/pamweb-config.yaml
+    # backup database
+    cp ${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql \
+        /home/${USER}/pamweb-backup/pg.pamweb-`date +"%m-%d-%y"`.sql
+    # backup media files
+    cp ${PAMWEB_PATH}/media.pamweb-`date +"%m-%d-%y"`.tar.gz \
+        /home/${USER}/pamweb-backup/media.pamweb-`date +"%m-%d-%y"`.tar.gz
+}
+
+restore_pamweb() {
+    echo "*** RESTORE DATABASE, MEDIA AND SETTINGS FILES ***"
+    # restore local_settings.py
+    cp /home/${USER}/pamweb-backup/local_settings.py \
+        ${PAMWEB_PATH}/pamweb/local_settings.py
+    # restore settings.py
+    cp /home/${USER}/pamweb-backup/settings.py \
+        ${PAMWEB_PATH}/pamweb/settings.py
+    # restore pamweb-config.yaml
+    cp /home/${USER}/pamweb-backup/pamweb-config.yaml \
+        ${PAMWEB_PATH}/deploy/pamweb-config.yaml
+    # restore database
+    cp /home/${USER}/pamweb-backup/${PAMWEB_DATABASE} \
+        ${PAMWEB_PATH}/${PAMWEB_DATABASE}
+    # restore media files
+    cp /home/${USER}/pamweb-backup/${PAMWEB_MEDIA_FILES} \
+        ${PAMWEB_PATH}/${PAMWEB_MEDIA_FILES}
+}
+
+loaddb_pamweb() {
+    echo "*** LOAD DATABASE ***"
+    # Uncomment to resolve: database "postgres" is being accessed by other users
+#    docker exec pam-web psql -U postgres -h db -c \
+#        "select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres';"
+    docker exec pam-web dropdb -U postgres -h db postgres
+    docker exec pam-web createdb -U postgres -h db postgres --encoding UNICODE --template=template0
+    docker exec pam-web psql -U postgres -h db -f ${PAMWEB_DATABASE} --quiet
+    docker exec pam-web python manage.py collectstatic --no-input
+    docker exec pam-web python manage.py migrate
+}
+
+loadmedia_pamweb() {
+    echo "*** LOAD MEDIA FILES ***"
+    cd ${PAMWEB_PATH}
+    tar -xzvf ${PAMWEB_MEDIA_FILES}
+    if [ ! -d "${PAMWEB_PATH}/static" ]; then
+        mkdir ${PAMWEB_PATH}/static;
+    fi
+    cp -r media_files/media static/
+    cd -
+}
+
+deploy_pamweb_nodb() {
+    echo "*** DEPLOY - NO DB ***"
+    build_pamweb
+    run_pamweb
+    echo "*** INFO: Allowing containers to start up ***"
+    for pc in $(seq 10 -1 1); do
+        echo -ne "$pc ...\033[0K\r"
+        sleep 1
+    done
+    start_nginx
+    docker exec pam-web python manage.py collectstatic --no-input
+    docker exec pam-web python manage.py migrate
+}
+
+deploy_dev_pamweb() {
+    echo "*** DEPLOY DEVELOPMENT - WITH DB ***"
+    build_pamweb
+    run_pamweb
+    echo "*** INFO: Allowing containers to start up ***"
+    for pc in $(seq 10 -1 1); do
+        echo -ne "$pc ...\033[0K\r"
+        sleep 1
+    done
+    start_nginx
+    loaddb_pamweb
+    loadmedia_pamweb
+}
+
+deploy_prod_pamweb() {
+    echo "*** DEPLOY PRODUCTION - WITH DB ***"
+    build_pamweb
+    restore_pamweb
+    run_pamweb
+    echo "*** INFO: Allowing containers to start up ***"
+    for pc in $(seq 10 -1 1); do
+        echo -ne "$pc ...\033[0K\r"
+        sleep 1
+    done
+    start_nginx
+    loaddb_pamweb
+    loadmedia_pamweb
+}
+
+case "$1" in
+    build) build_pamweb $1
+        ;;
+    backup) backup_pamweb $1
+        ;;
+    deploy_dev) deploy_dev_pamweb $1
+        ;;
+    deploy_prod) deploy_prod_pamweb $1
+        ;;
+    deploy_nodb) deploy_pamweb_nodb $1
+        ;;
+    loaddb) loaddb_pamweb $1
+        ;;
+    loadmedia) loadmedia_pamweb $1
+        ;;
+    maint_off) maint_off_pamweb $1
+        ;;
+    maint_on) maint_on_pamweb $1
+        ;;
+    rebuild) rebuild_pamweb $1 $2
+        ;;
+    restart) restart_pamweb $1
+        ;;
+    run) run_pamweb $1
+        ;;
+    start) start_pamweb $1
+        ;;
+    stop) stop_pamweb $1
+        ;;
+    remove) remove_pamweb $1
+        ;;
+    preflight) preflight_pamweb $1
+        ;;
+    start_nginx) start_nginx $1
+        ;;
+    stop_nginx) stop_nginx $1
+        ;;
+    *) display_usage
+        ;;
+esac
+
+exit 0;

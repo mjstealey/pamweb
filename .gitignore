@@ -2,5 +2,6 @@
 pamweb/pamweb/local_settings.py
 pamweb/static
 pamweb/log
-pamweb/nginx.conf
+pamweb/nginx/nginx.conf
 certs
+pamweb/deploy/local-env.sh

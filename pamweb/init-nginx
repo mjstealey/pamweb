@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-FQDN_OR_IP=192.168.56.102
-#NGINX_CONF_FILE=pam-nginx.conf
-NGINX_CONF_FILE=pam-nginx-ssl.conf
+sed 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' $NGINX_DIR/$NGINX_CONF_FILE > $NGINX_DIR/nginx.conf
+if [[ $USE_SSL = 'true' ]]; then
+    sed -i 's/SSL_CERT_FILE/'${SSL_CERT_FILE}'/g' $NGINX_DIR/nginx.conf
+    sed -i 's/SSL_KEY_FILE/'${SSL_KEY_FILE}'/g' $NGINX_DIR/nginx.conf
+fi
 
-sed 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' $NGINX_CONF_FILE > nginx.conf
-
-docker exec -ti pam-nginx cp /home/docker/pamweb/nginx.conf /etc/nginx/conf.d/default.conf
+docker exec -ti pam-nginx cp /home/docker/pamweb/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 docker exec -ti pam-nginx nginx -s reload
 
 exit 0;
