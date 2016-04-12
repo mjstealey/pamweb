@@ -1,28 +1,56 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block meta_title %}{% trans "Home" %}{% endblock %}
-{% block title %}{% trans "Home" %}{% endblock %}
+{% block meta_title %}{% trans "Hogar" %}{% endblock %}
+{% block title %}{% trans "Hogar" %}{% endblock %}
 
 {% block breadcrumb_menu %}
-<li class="active">{% trans "Home" %}</li>
+<li class="active">{% trans "Hogar" %}</li>
 {% endblock %}
 
 {% block main %}
 {% blocktrans %}
-<h2>Congratulations!</h2>
-<p>
-    Welcome to your new Mezzanine powered website.
-    Here are some quick links to get you started:
-</p>
-<ul>
-    <li><a href="/admin/">Log in to the admin interface</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/content-architecture.html">Creating custom page types</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/frequently-asked-questions.html#templates">Modifying HTML templates</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/frequently-asked-questions.html#why-isn-t-the-homepage-a-page-object-i-can-edit-via-the-admin">Changing this homepage</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/frequently-asked-questions.html">Other frequently asked questions</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/configuration.html#default-settings">Full list of settings</a></li>
-    <li><a href="http://mezzanine.jupo.org/docs/deployment.html">Deploying to a production server</a></li>
-</ul>
+
+<style>
+    body {
+        background-image: url("../static/img/background.png");
+        background-size: 100%;
+    }
+
+    div.transbox {
+        margin: 30px;
+        background-color: #ffffff;
+        border: 1px solid black;
+        opacity: 0.7;
+        filter: alpha(opacity=70); /* For IE8 and earlier */
+    }
+
+    div.transbox p {
+        margin: 5%;
+        line-height: 120%;
+        font-family: Futura;
+        font-size: x-large;
+        color: #000000;
+    }
+</style>
+
+<h2>Bienvenidos!</h2>
+<div class="transbox">
+    <p>Un poco sobre mi…</p>
+    <p>Hola mi nombre es Carolina y quiero que conozcas mi experiencia como maestra Montessori.</p>
+    <p>Durante este proceso podrás entender como se desarrolla esta plataforma alrededor de la pedagogía
+        Montessori y como la puedes utilizar como alternativa para tu vida, con tus hijos, en tu hogar o en
+        tu salón de clase.</p>
+    <p>Soy maestra hace un poco mas de 12 años, he trabajo en los diferentes niveles o grados en colegios
+        con niños desde los 2 años hasta adolecentes. Trabaje como maestra tradicional durante 4 anos hasta
+        que tuve la fantástica oportunidad de introducir mi vida y mi profesión en la educación Montessori.
+        Hoy ya cumplo 8 anos de experiencia como maestra Montessori y ha sido una de las mejores capítulos de mi vida.</p>
+    <p>Soy Licenciada en educación básica y tengo el certificado de Early Childhood de tres a seis años que
+        lo realice en AMS American Montessori Society de los Estados Unidos y actualmente estoy trabajando
+        en mi certificado de Lower Elementary de los 6 a los 9 años. Los anteriores han sido mis instrumentos
+        de trabajo que me han dado la oportunidad de experimentar y aprender al lado de los estudiantes y que ahora
+        deseo compartir contigo.</p>
+</div>
+
 {% endblocktrans %}
 {% endblock %}

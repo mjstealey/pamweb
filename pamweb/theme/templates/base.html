@@ -132,7 +132,10 @@
 
 <div class="row">
 <p class="site-info text-center">
-    {% trans "Powered by" %}
+        {% trans "For more information, email " %}
+        <a href="mailto:plataformamontessori@gmail.com?Subject=More%20Information" target="_top">plataformamontessori@gmail.com</a>
+{% comment %}
+{% trans "Powered by" %}
     <a href="http://mezzanine.jupo.org">Mezzanine</a>{% ifinstalled cartridge.shop %},
     <a href="http://cartridge.jupo.org">Cartridge</a>{% endifinstalled %}
     {% trans "and" %}
@@ -143,6 +146,7 @@
     <span class="separator">|</span>
     <a href="{% url "set_device" "mobile" %}?next={{ request.path }}">{% trans "View Mobile Site" %}</a>
     {% endifinstalled %}
+{% endcomment %}
 </p>
 </div>
 </div>
