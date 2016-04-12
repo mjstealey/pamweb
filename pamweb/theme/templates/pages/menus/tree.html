@@ -6,7 +6,7 @@
   {% for page in page_branch %}
   {% if not has_home and page.is_primary and forloop.first %}
   <li{% if on_home %} class="active"{% endif %} id="tree-menu-home">
-    <a href="{% url "home" %}">{% trans "Hogar" %}</a>
+    <a href="{% url "home" %}">{% trans "Inicio" %}</a>
   </li>
   {% endif %}
   {% if page.in_menu %}
