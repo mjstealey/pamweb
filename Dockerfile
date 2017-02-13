@@ -1,4 +1,4 @@
-FROM python:2.7.11
+FROM python:2.7
 MAINTAINER Michael J. Stealey <mjstealey@gmail.com>
 
 # Install debian system packages / prerequisites
@@ -7,19 +7,15 @@ RUN apt-get update && apt-get install -y \
     postgresql-client-9.4 \
     openssh-client \
     openssh-server \
+    supervisor \
     rsync
 
-# Install mezzanine from source
-WORKDIR /usr/src
-RUN git clone https://github.com/stephenmcd/mezzanine.git
-WORKDIR /usr/src/mezzanine
-RUN python setup.py install
+COPY . /tmp
+RUN cp /tmp/requirements.txt /requirements.txt
 
 # Install pip packages
-RUN pip install --upgrade pip
-RUN pip install \
-    psycopg2==2.6.1 \
-    gunicorn==19.4.5
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
 # Install SSH for remote PyCharm debugging
 RUN mkdir /var/run/sshd
@@ -38,9 +34,9 @@ RUN useradd -m docker \
 
 # Cleanup
 RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/src/mezzanine
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Set entry working directory 
+# Set entry working directory
 WORKDIR /home/docker/pamweb
 
 EXPOSE 22

@@ -190,9 +190,9 @@ restore_pamweb() {
 
 loaddb_pamweb() {
     echo "*** LOAD DATABASE ***"
-    # Uncomment to resolve: database "postgres" is being accessed by other users
-#    docker exec pam-web psql -U postgres -h db -c \
-#        "select pg_terminate_backend(pid) from pg_stat_activity where datname='postgres';"
+    # Ensure all prior connections to the database are removed prior to dropping the database
+    docker exec -u postgres -ti pam-db psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+    docker exec -u postgres -ti pam-db psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
     docker exec pam-web dropdb -U postgres -h db postgres
     docker exec pam-web createdb -U postgres -h db postgres --encoding UNICODE --template=template0
     docker exec pam-web psql -U postgres -h db -f ${PAMWEB_DATABASE} --quiet
