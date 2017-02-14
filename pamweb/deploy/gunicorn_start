@@ -5,7 +5,7 @@
 
 NAME="pamweb"                                   # Name of the application
 DJANGODIR=/home/docker/pamweb                   # Django project directory
-SOCKFILE=/var/run/gunicorn.sock                 # we will communicte using this unix socket
+SOCKFILE=/var/run/gunicorn.sock                 # we will communicate using this unix socket
 USER=root                                       # the user to run as
 GROUP=root                                      # the group to run as
 NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.cpu_count() * 2 + 1)\")")
@@ -13,7 +13,8 @@ NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.c
 DJANGO_SETTINGS_MODULE=pamweb.settings          # which settings file should Django use
 DJANGO_WSGI_MODULE=pamweb.wsgi                  # WSGI module name
 GUNICORN_LOG=/var/log/pamweb/gunicorn.log       # path to logfile
-TIMEOUT_PERIOD=300                              # timeout period in seconds
+TIMEOUT_PERIOD=30                               # timeout period in seconds
+MAX_REQUESTS=500                                # maximum number of requests a worker will process before restarting
 
 ### Do not edit below this line ###
 echo "Starting $NAME as `whoami`"
@@ -32,4 +33,5 @@ exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --bind=unix:$SOCKFILE \
   --log-level=debug \
   --log-file=$GUNICORN_LOG \
-  --timeout=$TIMEOUT_PERIOD
+  --timeout=$TIMEOUT_PERIOD \
+  --max-requests $MAX_REQUESTS
