@@ -131,8 +131,8 @@ run_pamweb() {
 
 backup_pamweb() {
     echo "*** BACKUP DATABASE, MEDIA AND SETTINGS FILES ***"
-    docker exec pam-web /usr/bin/pg_dump -c -d postgres -U postgres -h db \
-        > "${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql"
+    docker exec -u postgres pam-db pg_dumpall | dd status=none \
+        of="${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql"
     if [ ! -d "${PAMWEB_PATH}/media_files" ]; then
         mkdir ${PAMWEB_PATH}/media_files;
     fi
@@ -158,7 +158,7 @@ backup_pamweb() {
     cp ${PAMWEB_PATH}/deploy/pamweb-config.yaml \
         /home/${USER}/pamweb-backup/pamweb-config.yaml
     # backup docker-compose.yml
-    cp ${PAMWEB_PATH}/docker-compose.yml \
+    cp ${HOME_DIR}/docker-compose.yml \
         /home/${USER}/pamweb-backup/docker-compose.yml
     # backup database
     cp ${PAMWEB_PATH}/pg.pamweb-`date +"%m-%d-%y"`.sql \
@@ -181,7 +181,7 @@ restore_pamweb() {
         ${PAMWEB_PATH}/deploy/pamweb-config.yaml
     # restore docker-compose.yml
     cp /home/${USER}/pamweb-backup/docker-compose.yml \
-        ${PAMWEB_PATH}/docker-compose.yml
+        ${HOME_DIR}/docker-compose.yml
     # restore database
     cp /home/${USER}/pamweb-backup/${PAMWEB_DATABASE} \
         ${PAMWEB_PATH}/${PAMWEB_DATABASE}
