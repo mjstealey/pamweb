@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cp /home/docker/pamweb/deploy/pamweb.conf /etc/supervisor/conf.d/pamweb.conf
+/usr/bin/supervisord -n

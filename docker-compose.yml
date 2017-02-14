@@ -21,7 +21,7 @@ web:
   command: /bin/bash init-web
 nginx:
   container_name: pam-nginx
-  image: nginx:1.9
+  image: nginx
   volumes_from:
     - web
   volumes:

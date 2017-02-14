@@ -224,13 +224,13 @@ TEMPLATES = [
 if DJANGO_VERSION < (1, 9):
     del TEMPLATES[0]["OPTIONS"]["builtins"]
 
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
 ################
 # APPLICATIONS #
 ################
 
 INSTALLED_APPS = (
+    "theme",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -239,7 +239,6 @@ INSTALLED_APPS = (
     "django.contrib.sites",
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
-    "theme",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
@@ -275,8 +274,6 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.TemplateForHostMiddleware",
     "mezzanine.core.middleware.AdminLoginInterfaceSelectorMiddleware",
     "mezzanine.core.middleware.SitePermissionMiddleware",
-    # Uncomment the following if using any of the SSL settings:
-    # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
 )
